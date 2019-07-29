@@ -1,22 +1,31 @@
 
 ''' folder directory of SVS images'''
-FILE_DIR = "/Users/juhania/Documents/projects/tall cell/cases/"
+FILE_DIR = "/fs/project/PAS0272/Tall_Cells/"
 
+''' input img format'''
 IMG_FORMAT = '.svs'
 
+''' Where to save output tiles'''
+OUTPUT_DIR = "/fs/project/PAS0272/Tall_Cells/tiles/"
 
-OUTPUT_DIR = "/Users/juhania/Documents/projects/tall cell/tiles/"
+#OUTPUT_DIR = "/Users/juhania/Documents/projects/tall cell/tiles/"
+
 TILES_DIR = "/Users/juhania/Documents/projects/tall cell/tiles/"
 
 DB_NAME = "tiles"
 
-PATCH_SIZE = 64
+TILE_H_W = (1024,1024)
 
-LEVEL = 5
+LEVEL = 8
 
-MAGNIFICATION = 2.5
+MAGNIFICATION = 20
 
-OVERLAP = 0
+OVERLAP_X_Y = (0,0)
 
-SAVE_TILES = False
+SAVE_TILES = True
+
+# increase this to reject more
+REJECT_THRESHOLD = 200
+
+MAX_WHITE_SIZE = (TILE_H_W[0] * TILE_H_W[1]) / 2
 
