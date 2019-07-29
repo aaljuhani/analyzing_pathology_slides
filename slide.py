@@ -20,9 +20,9 @@ import matplotlib.pyplot as plt
 
 
 
-class slide():
+class WholeSlideImage():
     """
-    An application that utilize HistomicsTK to tile SVS images and analyze them
+    A Class that utilize HistomicsTK to tile SVS Whole Slide Images
 
     """
     def __init__(self):
@@ -90,7 +90,12 @@ class slide():
 
             #img
             im_tile = np.array(tile_info['tile'])
-            if (cfg.SAVE_TILES):
+            """ Check if the img is all white (no content in the tile)"""
+            extrema = im_tile.convert("L").getextrema()
+            if extrema[0] == extrema[1]:
+                """ This image is one solid color so no need to save it"""
+                pass
+            elif (cfg.SAVE_TILES):
                 self.save_tile_to_disk(cfg.OUTPUT_DIR, im_tile, (tile_info['x'], tile_info['y']),file, magnification )
             #mean rgb
             tile_mean_rgb = np.mean(im_tile[:, :, :3], axis=(0, 1))
@@ -126,12 +131,12 @@ class slide():
 
 
 if __name__ == '__main__':
-    s = slide()
-    wsi_files = s.get_wsi_files()
+    WSI = WholeSlideImage()
+    wsi_files = WSI.get_wsi_files()
 
-    for f in tqdm(s.files):
-        s.get_slide_metadata(f)
-        s.tile_wsi(f, cfg.MAGNIFICATION , 512, 512, 0 , 0)
+    for f in tqdm(WSI.files):
+        WSI.get_slide_metadata(f)
+        WSI.tile_wsi(f, cfg.MAGNIFICATION , 512, 512, 0 , 0)
 
     '''
     for f in s.files:

@@ -6,6 +6,7 @@ IMG_FORMAT = '.svs'
 
 
 OUTPUT_DIR = "/Users/juhania/Documents/projects/tall cell/tiles/"
+TILES_DIR = "/Users/juhania/Documents/projects/tall cell/tiles/"
 
 DB_NAME = "tiles"
 
