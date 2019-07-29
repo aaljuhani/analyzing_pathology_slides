@@ -1,20 +1,20 @@
-import py_wsi
-import py_wsi.imagepy_toolkit as tk
+
 import config as cfg
 from tqdm import tqdm
 import histomicstk as htk
-
+import sys
 import histomicstk.preprocessing.color_normalization as htk_cnorm
 import histomicstk.segmentation as htk_seg
 from PIL import Image
 
+import cv2
 import large_image
 import os
 import numpy as np
 from os import listdir
 from os.path import isfile, join
 import matplotlib
-matplotlib.use('TkAgg')
+#matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 
 
@@ -70,6 +70,7 @@ class slide():
         ts = large_image.getTileSource(os.path.join(cfg.FILE_DIR, file))
 
         num_tiles = 0
+        num_empty_tiles = 0
 
         tile_means = []
         tile_areas = []
@@ -79,33 +80,52 @@ class slide():
                 scale=dict(magnification=magnification),
                 tile_size=dict(width=tile_width, height=tile_hight),
                 tile_overlap=dict(x=tile_overlap_x, y=tile_overlap_y),
-                format=large_image.tilesource.TILE_FORMAT_PIL
-        )):
+                format=large_image.tilesource.TILE_FORMAT_PIL)):
             #print(tile_info)
 
-
-            if num_tiles == 100:
-                print('Tile-{} = '.format(num_tiles))
+            if (num_tiles > 0 and num_tiles % 100 == 0):
+                print('Tile - {} '.format(num_tiles))
+                print('Empty Tile - {} '.format(num_empty_tiles))
                 #display(tile_info)
 
             #img
             im_tile = np.array(tile_info['tile'])
-            if (cfg.SAVE_TILES):
-                self.save_tile_to_disk(cfg.OUTPUT_DIR, im_tile, (tile_info['x'], tile_info['y']),file, magnification )
-            #mean rgb
-            tile_mean_rgb = np.mean(im_tile[:, :, :3], axis=(0, 1))
-
-            tile_means.append(tile_mean_rgb)
-            tile_areas.append(tile_info['width'] * tile_info['height'])
-
-            num_tiles += 1
+            
+            # To check the content of the image
+            if (self.is_good_tile(im_tile)):
+                if(cfg.SAVE_TILES):
+                    self.save_tile_to_disk(cfg.OUTPUT_DIR, im_tile, (tile_info['x'], tile_info['y']),file, magnification )
+                #mean rgb
+                tile_mean_rgb = np.mean(im_tile[:, :, :3], axis=(0, 1))
+    
+                tile_means.append(tile_mean_rgb)
+                tile_areas.append(tile_info['width'] * tile_info['height'])
+    
+                num_tiles += 1
+            else:
+                """ This image is one solid color so no need to save it"""
+                num_empty_tiles += 1
+                
 
 
         slide_mean_rgb = np.average(tile_means, axis=0, weights=tile_areas)
 
         print('Number of tiles = {}'.format(num_tiles))
+        print('Number of empty tiles = {}'.format(num_empty_tiles))
         print('Slide mean color = {}'.format(slide_mean_rgb))
 
+    def is_good_tile(self, tile):
+        # tile is nparray
+        img = cv2.cvtColor(tile, cv2.COLOR_BGR2GRAY)
+        blur = cv2.GaussianBlur(img, (5, 5), 0)
+        ret3, th3 = cv2.threshold(blur, cfg.REJECT_THRESHOLD, 255, cv2.THRESH_BINARY)
+        contours, hierarchy = cv2.findContours(th3, cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)
+        return self.get_cnt_sum(contours, 2) < cfg.MAX_WHITE_SIZE
+        
+    def get_cnt_sum(self, contours, topn):
+        res = 0
+        cnts = sorted(contours, key=lambda x: cv2.contourArea(x))[-topn:]
+        return sum([cv2.contourArea(cnt) for cnt in cnts])
 
 
     def save_tile_to_disk(self, output_loc, tile, coords, file_name , magnification):
@@ -127,13 +147,21 @@ class slide():
 
 if __name__ == '__main__':
     s = slide()
-    wsi_files = s.get_wsi_files()
-
+    
+    #wsi_files = s.get_wsi_files()
+    file_to_tile = sys.argv[1]
+    print(file_to_tile)
+    
+    print(s.get_slide_metadata(file_to_tile))
+    
+    s.tile_wsi(file_to_tile,cfg.MAGNIFICATION ,cfg.TILE_H_W[0], cfg.TILE_H_W[1], cfg.OVERLAP_X_Y[0], cfg.OVERLAP_X_Y[1])
+    
+    '''
     for f in tqdm(s.files):
         s.get_slide_metadata(f)
-        s.tile_wsi(f, cfg.MAGNIFICATION , 512, 512, 0 , 0)
+        s.tile_wsi(f, cfg.MAGNIFICATION ,cfg.TILE_H_W[0], cfg.TILE_H_W[1], cfg.OVERLAP_X_Y[0], cfg.OVERLAP_X_Y[1])
 
-    '''
+    
     for f in s.files:
         s.load_wsi(f)
 
