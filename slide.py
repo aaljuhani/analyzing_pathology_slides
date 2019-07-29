@@ -6,7 +6,7 @@ import sys
 import histomicstk.preprocessing.color_normalization as htk_cnorm
 import histomicstk.segmentation as htk_seg
 from PIL import Image
-
+from nuclei_seg import NucleiSegmentation
 import cv2
 import large_image
 import os
@@ -20,13 +20,15 @@ import matplotlib.pyplot as plt
 
 
 
-class slide():
+class WholeSlideImage():
     """
     An application that utilize HistomicsTK to tile SVS images and analyze them
 
     """
     def __init__(self):
         self.filedir = cfg.FILE_DIR
+        self.nuclei_seg = NucleiSegmentation()
+
         #self.turtle = py_wsi.Turtle(self.filedir, cfg.DB_LOCATION, cfg.DB_NAME, storage_type='disk')
         #self.files=self.turtle.files
         #self.print_slides_info()
@@ -94,14 +96,16 @@ class slide():
             # To check the content of the image
             if (self.is_good_tile(im_tile)):
                 if(cfg.SAVE_TILES):
-                    self.save_tile_to_disk(cfg.OUTPUT_DIR, im_tile, (tile_info['x'], tile_info['y']),file, magnification )
+                    self.save_tile_to_disk(im_tile, (tile_info['x'], tile_info['y']),file, magnification )
                 #mean rgb
                 tile_mean_rgb = np.mean(im_tile[:, :, :3], axis=(0, 1))
-
                 tile_means.append(tile_mean_rgb)
                 tile_areas.append(tile_info['width'] * tile_info['height'])
 
                 num_tiles += 1
+
+                """ Here is the call for computing morphometry features for each good tile"""
+                self.nuclei_seg.compute_morphometry_feat(im_tile, (tile_info['x'], tile_info['y']),file, magnification)
             else:
                 """ This image is one solid color so no need to save it"""
                 num_empty_tiles += 1
@@ -128,10 +132,9 @@ class slide():
         return sum([cv2.contourArea(cnt) for cnt in cnts])
 
 
-    def save_tile_to_disk(self, output_loc, tile, coords, file_name , magnification):
+    def save_tile_to_disk(self, tile, coords, file_name , magnification):
         """ Saves numpy tiles to .png files (full resolution).
             Meta data is saved in the file name.
-            - output_loc       folder to save images in
             - tile             numpy image
             - coords            x, y tile coordinates
             - file_name         original source WSI name
@@ -141,20 +144,21 @@ class slide():
         tile_fname = file_name + "_" + str(coords[0]) + "_" + str(coords[1]) + "_" + str(magnification) + "_"
 
         # Save the image.
-        Image.fromarray(tile).save(output_loc + tile_fname + ".png")
+        Image.fromarray(tile).save(cfg.OUTPUT_DIR + tile_fname + ".png")
 
 
 
 if __name__ == '__main__':
-    s = slide()
+    wsi = WholeSlideImage()
+
 
     #wsi_files = s.get_wsi_files()
     file_to_tile = sys.argv[1]
     print(file_to_tile)
 
-    print(s.get_slide_metadata(file_to_tile))
+    print(wsi.get_slide_metadata(file_to_tile))
 
-    s.tile_wsi(file_to_tile,cfg.MAGNIFICATION ,cfg.TILE_H_W[0], cfg.TILE_H_W[1], cfg.OVERLAP_X_Y[0], cfg.OVERLAP_X_Y[1])
+    wsi.tile_wsi(file_to_tile,cfg.MAGNIFICATION ,cfg.TILE_H_W[0], cfg.TILE_H_W[1], cfg.OVERLAP_X_Y[0], cfg.OVERLAP_X_Y[1])
 
     '''
     for f in tqdm(s.files):
