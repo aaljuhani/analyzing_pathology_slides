@@ -150,6 +150,39 @@ class WholeSlideImage():
         # Save the image.
         Image.fromarray(tile).save(cfg.OUTPUT_DIR + tile_fname + ".png")
 
+    def get_tile(self, wsi_path, tile_name):
+        """
+        :param tile_name:
+        Should follow the same format as saved tiles:
+        tile_info['x']_tile_info['y']_magnification_
+        ex: 22528_4096_40_
+
+        :return: save tile in OUTPUT_TILES_FOLDEROUTPUT_DIR
+
+        """
+
+        #parse tile name
+        tile_name_list = tile_name.split("_")
+
+        x = tile_name_list[0]
+        y = tile_name_list[1]
+        magnification = tile_name_list[3]
+
+
+        # Read WSI
+        ts = large_image.getTileSource(wsi_path)
+
+
+        # get region
+        im_roi, _ = ts.getRegion(
+            region=dict(left=x, top=y, width=cfg.TILE_H_W[0], height=cfg.TILE_H_W[1], units='base_pixels'),
+            scale=dict(magnification=magnification),
+            format=large_image.tilesource.TILE_FORMAT_NUMPY
+        )
+
+        plt.imshow(im_roi)
+        plt.savefig(im_roi+'.png')
+
 
 
 if __name__ == '__main__':
