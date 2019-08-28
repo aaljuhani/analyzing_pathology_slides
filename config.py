@@ -4,23 +4,20 @@ import numpy as np
 """ ************** FOLDERS and PATH Configration ***************"""
 
 ''' folder directory of SVS images'''
-FILE_DIR = "/Users/juhania/Documents/projects/tall cell/"
-
-#FILE_DIR = "/fs/project/PAS0272/Tall_Cells/"
+FILE_DIR = "/fs/project/PAS0272/Tall_Cells/"
+#FILE_DIR = "/Users/juhania/Documents/projects/tall cell/"
 
 ''' input img format'''
 IMG_FORMAT = '.svs'
 
 ''' Where to save output tiles'''
-#OUTPUT_DIR = "/fs/project/PAS0272/Tall_Cells/tiles/"
+OUTPUT_DIR = "/fs/project/PAS0272/Tall_Cells/tiles_40/"
+#OUTPUT_DIR = "/Users/juhania/Documents/projects/tall cell/tiles/"
 
-OUTPUT_DIR = "/Users/juhania/Documents/projects/tall cell/tiles/"
+TILES_DIR = "/fs/project/PAS0272/Tall_Cells/tiles_40/"
+#TILES_DIR = "/Users/juhania/Documents/projects/tall cell/tiles/"
 
-#TILES_DIR = "/fs/project/PAS0272/Tall_Cells/tiles/"
-
-TILES_DIR = "/Users/juhania/Documents/projects/tall cell/tiles/"
-
-FEATURES_DIR = "/Users/juhania/Documents/projects/tall cell/feat/"
+FEATURES_DIR = "/fs/project/PAS0272/Tall_Cells/feat/"
 
 
 
@@ -30,11 +27,11 @@ TILE_H_W = (1024,1024)
 
 LEVEL = 8
 
-MAGNIFICATION = 20
+MAGNIFICATION = 40
 
 OVERLAP_X_Y = (0,0)
 
-SAVE_TILES = True
+SAVE_TILES = False
 
 # increase this to reject more
 REJECT_THRESHOLD = 200
@@ -42,21 +39,21 @@ REJECT_THRESHOLD = 200
 MAX_WHITE_SIZE = (TILE_H_W[0] * TILE_H_W[1]) / 2
 
 #reference image for normalization
-REF_IMG_NORM = ""
+REF_IMG_NORM = "/fs/project/PAS0272/Tall_Cells/tiles_20/Case 1_001.svs_20480.0_28672.0_20_.png"
 
 
 """ ************** Nuclei Segmentation Configration ***************"""
 # segment foreground
 FORGROUND_THRESHOLD = 60
 # run adaptive multi-scale LoG filter
-MIN_RADIUS = 10
-MAX_RADIUS = 15
+MIN_RADIUS = 5
+MAX_RADIUS = 10
 
 # detect and segment nuclei using local maximum clustering
 LOCAL_MAX_SEARCH_RADIUS = 10
 
 # filter out small objects
-MIN_NUCLEAUS_AREA = 80
+MIN_NUCLEAUS_AREA = 60
 
 """ ************** Stains Configration ***************"""
 

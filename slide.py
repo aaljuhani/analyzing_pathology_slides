@@ -73,6 +73,7 @@ class WholeSlideImage():
 
         num_tiles = 0
         num_empty_tiles = 0
+        num_nuclei = 0
 
         tile_means = []
         tile_areas = []
@@ -105,7 +106,7 @@ class WholeSlideImage():
                 num_tiles += 1
 
                 """ Here is the call for computing morphometry features for each good tile"""
-                self.nuclei_seg.compute_morphometry_feat(im_tile, (tile_info['x'], tile_info['y']),file, magnification)
+                num_nuclei += self.nuclei_seg.compute_morphometry_feat(im_tile, (tile_info['x'], tile_info['y']),file, magnification)
             else:
                 """ This image is one solid color so no need to save it"""
                 num_empty_tiles += 1
@@ -113,12 +114,15 @@ class WholeSlideImage():
 
 
         slide_mean_rgb = np.average(tile_means, axis=0, weights=tile_areas)
-
+        print('Slide: ', file)
+        print('Total num of Nuclei = {}'.format(num_nuclei))
         print('Number of tiles = {}'.format(num_tiles))
         print('Number of empty tiles = {}'.format(num_empty_tiles))
         print('Slide mean color = {}'.format(slide_mean_rgb))
 
     def is_good_tile(self, tile):
+        if(tile.shape[0] < cfg.TILE_H_W[0] or tile.shape[1] < cfg.TILE_H_W[1]):
+            return False
         # tile is nparray
         img = cv2.cvtColor(tile, cv2.COLOR_BGR2GRAY)
         blur = cv2.GaussianBlur(img, (5, 5), 0)
@@ -150,15 +154,19 @@ class WholeSlideImage():
 
 if __name__ == '__main__':
     wsi = WholeSlideImage()
+    wsi_files = wsi.get_wsi_files()
+    print(wsi_files)
+    
+    for f in tqdm(wsi_files):
+        wsi.get_slide_metadata(f)
+        wsi.tile_wsi(f, cfg.MAGNIFICATION ,cfg.TILE_H_W[0], cfg.TILE_H_W[1], cfg.OVERLAP_X_Y[0], cfg.OVERLAP_X_Y[1])
 
+    
+    #file_to_tile = sys.argv[1]
+    #print(file_to_tile)
+    #print(wsi.get_slide_metadata(file_to_tile))
 
-    #wsi_files = s.get_wsi_files()
-    file_to_tile = sys.argv[1]
-    print(file_to_tile)
-
-    print(wsi.get_slide_metadata(file_to_tile))
-
-    wsi.tile_wsi(file_to_tile,cfg.MAGNIFICATION ,cfg.TILE_H_W[0], cfg.TILE_H_W[1], cfg.OVERLAP_X_Y[0], cfg.OVERLAP_X_Y[1])
+    #wsi.tile_wsi(file_to_tile,cfg.MAGNIFICATION ,cfg.TILE_H_W[0], cfg.TILE_H_W[1], cfg.OVERLAP_X_Y[0], cfg.OVERLAP_X_Y[1])
 
     '''
     for f in tqdm(s.files):
