@@ -150,7 +150,7 @@ class WholeSlideImage():
         # Save the image.
         Image.fromarray(tile).save(cfg.OUTPUT_DIR + tile_fname + ".png")
 
-    def get_tile(self, wsi_path, tile_name):
+    def get_tile(self, wsi_file, tile_name):
         """
         :param tile_name:
         Should follow the same format as saved tiles:
@@ -160,17 +160,19 @@ class WholeSlideImage():
         :return: save tile in OUTPUT_TILES_FOLDEROUTPUT_DIR
 
         """
-
+        
         #parse tile name
         tile_name_list = tile_name.split("_")
+        print("Tile_name_list", tile_name_list)
 
-        x = tile_name_list[0]
-        y = tile_name_list[1]
-        magnification = tile_name_list[3]
+        x = int(tile_name_list[0])
+        y = int(tile_name_list[1])
+        magnification = int(tile_name_list[2])
 
+        print("Get tile: ", wsi_file)
 
         # Read WSI
-        ts = large_image.getTileSource(wsi_path)
+        ts = large_image.getTileSource(os.path.join(cfg.FILE_DIR, wsi_file))
 
 
         # get region
@@ -180,13 +182,14 @@ class WholeSlideImage():
             format=large_image.tilesource.TILE_FORMAT_NUMPY
         )
 
-        plt.imshow(im_roi)
-        plt.savefig(im_roi+'.png')
+        Image.fromarray(im_roi).save("roi_image.png")
 
 
 
 if __name__ == '__main__':
     wsi = WholeSlideImage()
+    ''' 
+    # Code for tiling WSI and compute morpho feat
     wsi_files = wsi.get_wsi_files()
     print(wsi_files)
     
@@ -194,6 +197,10 @@ if __name__ == '__main__':
         wsi.get_slide_metadata(f)
         wsi.tile_wsi(f, cfg.MAGNIFICATION ,cfg.TILE_H_W[0], cfg.TILE_H_W[1], cfg.OVERLAP_X_Y[0], cfg.OVERLAP_X_Y[1])
 
+    '''
+    
+    # Code for retriving singel tile
+    wsi.get_tile("Case 5_001.svs", "68608_18432_40_")
     
     #file_to_tile = sys.argv[1]
     #print(file_to_tile)
