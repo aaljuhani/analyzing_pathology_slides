@@ -13,6 +13,8 @@ import os
 import numpy as np
 from os import listdir
 from os.path import isfile, join
+import argparse
+
 import matplotlib
 #matplotlib.use('Agg')
 import matplotlib.pyplot as plt
@@ -187,41 +189,55 @@ class WholeSlideImage():
 
 
 if __name__ == '__main__':
-    wsi = WholeSlideImage()
-    ''' 
-    # Code for tiling WSI and compute morpho feat
-    wsi_files = wsi.get_wsi_files()
-    print(wsi_files)
-    
-    for f in tqdm(wsi_files):
-        wsi.get_slide_metadata(f)
-        wsi.tile_wsi(f, cfg.MAGNIFICATION ,cfg.TILE_H_W[0], cfg.TILE_H_W[1], cfg.OVERLAP_X_Y[0], cfg.OVERLAP_X_Y[1])
 
-    '''
-    
-    # Code for retriving singel tile
-    wsi.get_tile("Case 5_001.svs", "68608_18432_40_")
-    
-    #file_to_tile = sys.argv[1]
-    #print(file_to_tile)
-    #print(wsi.get_slide_metadata(file_to_tile))
+    parser = argparse.ArgumentParser()
 
-    #wsi.tile_wsi(file_to_tile,cfg.MAGNIFICATION ,cfg.TILE_H_W[0], cfg.TILE_H_W[1], cfg.OVERLAP_X_Y[0], cfg.OVERLAP_X_Y[1])
+    parser.add_argument('--analyse_all', help="Provide a folder that has all WSI in svs format")
+    parser.add_argument('--analyse_WSI', help="Provide a path for a single WSI")
+    parser.add_argument('--get_single_tile', nargs=2,
+                        help="Provide WSI path and a tile coordinates and magnification level in this format(ex: 12000_3488_40)")
+    parser.add_argument('--analyse_single_tile', nargs=2,
+                        help="Provide WSI path and a tile coordinates and magnification level in this format(ex: 12000_3488_40)")
 
-    '''
-    for f in tqdm(s.files):
-        s.get_slide_metadata(f)
-        s.tile_wsi(f, cfg.MAGNIFICATION ,cfg.TILE_H_W[0], cfg.TILE_H_W[1], cfg.OVERLAP_X_Y[0], cfg.OVERLAP_X_Y[1])
+    args = parser.parse_args()
 
-    
-    for f in s.files:
-        s.load_wsi(f)
+    if args.analyse_all:
+        print("analyse all svs files in a folder")
+        cfg.FILE_DIR = args.get_single_tile
 
-    for f in s.files:
-        s.retrive_wsi_low_res(f)
-    
-    for f in s.files:
-        s.tile_wsi(f)
-    '''
+        # Code for tiling WSI and compute morpho feat
+        wsi = WholeSlideImage()
+        wsi_files = wsi.get_wsi_files()
+        print(wsi_files)
 
-    #s.tile_wsi("file")
+        for f in tqdm(wsi_files):
+            wsi.get_slide_metadata(f)
+            wsi.tile_wsi(f, cfg.MAGNIFICATION, cfg.TILE_H_W[0], cfg.TILE_H_W[1], cfg.OVERLAP_X_Y[0], cfg.OVERLAP_X_Y[1])
+
+
+    elif (args.analyse_WSI):
+        print("analyse WSI")
+        cfg.WSI_PATH = args.analyse_WSI
+        wsi = WholeSlideImage()
+        wsi.get_slide_metadata(cfg.WSI_PATH)
+        wsi.tile_wsi(cfg.WSI_PATH, cfg.MAGNIFICATION, cfg.TILE_H_W[0], cfg.TILE_H_W[1], cfg.OVERLAP_X_Y[0], cfg.OVERLAP_X_Y[1])
+
+
+    elif args.get_single_tile:
+        print("Get Single Tile")
+        WSI_PATH = args.get_single_tile[0]
+        # TODO : check format
+        # should be in the format of xcoor_ycoor_magnification
+        tile_xcoor_ycoor_magnification = args.get_single_tile[1]
+
+        wsi = WholeSlideImage()
+        wsi.get_tile(WSI_PATH, tile_xcoor_ycoor_magnification)
+
+    elif args.analyse_single_tile:
+        # TODO: implement
+        print("analyse single tile")
+        WSI_PATH = args.get_single_tile = [0]
+        tile_xcoor_ycoor_magnification = args.get_single_tile = [1]
+
+
+
