@@ -108,7 +108,7 @@ class WholeSlideImage():
                 num_tiles += 1
 
                 """ Here is the call for computing morphometry features for each good tile"""
-                num_nuclei += self.nuclei_seg.compute_morphometry_feat(im_tile, (tile_info['x'], tile_info['y']),file, magnification)
+                num_nuclei += self.nuclei_seg.compute_nuclei_feat(im_tile, (tile_info['x'], tile_info['y']),file, magnification)
             else:
                 """ This image is one solid color so no need to save it"""
                 num_empty_tiles += 1
@@ -184,7 +184,28 @@ class WholeSlideImage():
             format=large_image.tilesource.TILE_FORMAT_NUMPY
         )
 
-        Image.fromarray(im_roi).save("roi_image.png")
+        Image.fromarray(im_roi).save(cfg.TILES_DIR+tile_name+".png")
+        
+        return im_roi
+        
+    def analyse_tile(self, wsi_file, tile_name):
+        
+        cfg.SAVE_TILES = True
+        
+        #parse tile name
+        tile_name_list = tile_name.split("_")
+        print("Tile_name_list", tile_name_list)
+
+        x = int(tile_name_list[0])
+        y = int(tile_name_list[1])
+        magnification = int(tile_name_list[2])
+        
+        file = os.path.basename(wsi_file)
+        
+        im_roi = self.get_tile(wsi_file, tile_name)
+        num_nuclei = self.nuclei_seg.compute_nuclei_feat(im_roi, (x,y) ,file, magnification)
+        print('Total num of Nuclei = {}'.format(num_nuclei))
+        
 
 
 
@@ -236,8 +257,11 @@ if __name__ == '__main__':
     elif args.analyse_single_tile:
         # TODO: implement
         print("analyse single tile")
-        WSI_PATH = args.get_single_tile = [0]
-        tile_xcoor_ycoor_magnification = args.get_single_tile = [1]
+        WSI_PATH = args.analyse_single_tile[0]
+        tile_xcoor_ycoor_magnification = args.analyse_single_tile[1]
+        
+        wsi = WholeSlideImage()
+        wsi.analyse_tile(WSI_PATH,tile_xcoor_ycoor_magnification)
 
 
 

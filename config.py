@@ -14,7 +14,7 @@ IMG_FORMAT = '.svs'
 OUTPUT_DIR = "/fs/project/PAS0272/Tall_Cells/tiles_40/"
 #OUTPUT_DIR = "/Users/juhania/Documents/projects/tall cell/tiles/"
 
-TILES_DIR = "/fs/project/PAS0272/Tall_Cells/tiles_40/"
+TILES_DIR = "/fs/project/PAS0272/Tall_Cells_tiles/"
 #TILES_DIR = "/Users/juhania/Documents/projects/tall cell/tiles/"
 
 FEATURES_DIR = "/fs/project/PAS0272/Tall_Cells/feat/"
@@ -27,7 +27,7 @@ TILE_H_W = (1024,1024)
 
 LEVEL = 8
 
-MAGNIFICATION = 40
+MAGNIFICATION = 20
 
 OVERLAP_X_Y = (0,0)
 
@@ -44,16 +44,17 @@ REF_IMG_NORM = "/fs/project/PAS0272/Tall_Cells/tiles_20/Case 1_001.svs_20480.0_2
 
 """ ************** Nuclei Segmentation Configration ***************"""
 # segment foreground
-FORGROUND_THRESHOLD = 60
+FORGROUND_THRESHOLD = 90
+
 # run adaptive multi-scale LoG filter
 MIN_RADIUS = 5
-MAX_RADIUS = 10
+MAX_RADIUS = 30
 
 # detect and segment nuclei using local maximum clustering
-LOCAL_MAX_SEARCH_RADIUS = 10
+LOCAL_MAX_SEARCH_RADIUS = 5
 
 # filter out small objects
-MIN_NUCLEAUS_AREA = 60
+MIN_NUCLEAUS_AREA = 30
 
 """ ************** Stains Configration ***************"""
 

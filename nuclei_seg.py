@@ -51,13 +51,15 @@ class NucleiSegmentation():
         """
         # perform reinhard color normalization
         self.im_nmzd = htk.preprocessing.color_normalization.reinhard(self.img_tile, self.mean_ref, self.std_ref)
-        #self.display_results(self.im_reference, "Reference Image", self.im_nmzd, "Normalized Input Image")
+        if(cfg.SAVE_TILES):
+            self.display_results(self.im_reference, "Reference Image", self.im_nmzd, "Normalized Input Image")
 
 
     def color_deconvolution(self):
         # perform standard color deconvolution
         self.im_stains = htk.preprocessing.color_deconvolution.color_deconvolution(self.im_nmzd, cfg.W).Stains
-        #self.display_results(self.im_stains[:, :, 0], cfg.stain_1, self.im_stains[:, :, 1], cfg.stain_2)
+        if(cfg.SAVE_TILES):
+            self.display_results(self.im_stains[:, :, 0], cfg.stain_1, self.im_stains[:, :, 1], cfg.stain_2)
 
 
     def display_results(self, img1 , title1, img2, title2):
@@ -82,7 +84,12 @@ class NucleiSegmentation():
         plt.subplot(1, 2, 2)
         plt.imshow(img2)
         _ = plt.title(title2, fontsize=titlesize)
-        plt.savefig("Color_Deconv.png")
+        
+        if(title1 == "Reference Image"):
+            plt.savefig(cfg.TILES_DIR+self.tile_fname+"_Normalization.png")
+        else:
+            plt.savefig(cfg.TILES_DIR+self.tile_fname+"_deconve.png")
+                
 
     def segment_nuclei(self):
         """
@@ -90,15 +97,15 @@ class NucleiSegmentation():
         :return:
         """
         # get nuclei/hematoxylin channel
-        im_nuclei_stain = self.im_stains[:, :, 0]
+        self.im_nuclei_stain = self.im_stains[:, :, 0]
 
         # segment foreground
         im_fgnd_mask = sp.ndimage.morphology.binary_fill_holes(
-            im_nuclei_stain < cfg.FORGROUND_THRESHOLD)
+            self.im_nuclei_stain < cfg.FORGROUND_THRESHOLD)
 
         # run adaptive multi-scale LoG filter
         im_log_max, im_sigma_max = htk.filters.shape.cdog(
-            im_nuclei_stain, im_fgnd_mask,
+            self.im_nuclei_stain, im_fgnd_mask,
             sigma_min=cfg.MIN_RADIUS * np.sqrt(2),
             sigma_max=cfg.MAX_RADIUS * np.sqrt(2)
         )
@@ -113,11 +120,15 @@ class NucleiSegmentation():
 
         # compute nuclei properties
         objProps = skimage.measure.regionprops(im_nuclei_seg_mask)
+        
+        if(cfg.SAVE_TILES):
+            self.display_nuclei_results(objProps)
+            
 
         #print('Number of nuclei = ', len(objProps))
         # number of nuclei
         return len(objProps)
-        #self.display_nuclei_results(objProps )
+        #
         #plt.savefig("nuclei_results")
         
 
@@ -154,10 +165,12 @@ class NucleiSegmentation():
                                        width, height, fill=False, ec='g', linewidth=2)
             plt.gca().add_patch(mrect)
             
+        plt.savefig(cfg.TILES_DIR+self.tile_fname+"_nuclei_results.png")
+            
 
 
 
-    def compute_morphometry_feat(self, tile, coords, file_name , magnification):
+    def compute_nuclei_feat(self, tile, coords, file_name , magnification):
         """
         This function will call the other function to compute morphometry features
         then it will append all tiles feature in one csv file named by wsi case.
@@ -168,7 +181,7 @@ class NucleiSegmentation():
         :return:
         """
         # Construct tile fname
-        tile_fname = str(coords[0]) + "_" + str(coords[1]) + "_" + str(magnification) + "_"
+        self.tile_fname = str(coords[0]) + "_" + str(coords[1]) + "_" + str(magnification) + "_"
 
         self.load_img(tile)
         self.normalize_tile()
@@ -176,12 +189,14 @@ class NucleiSegmentation():
         num_nuclei = self.segment_nuclei()
 
 
-        morphometry_dataframe = htk.features.compute_morphometry_features(self.im_nuclei_seg_mask)
-        morphometry_dataframe['tile'] = tile_fname
+        #morphometry_dataframe = htk.features.compute_morphometry_features(self.im_nuclei_seg_mask)
+        nuclei_feat_dataframe = htk.features.compute_nuclei_features(self.im_nuclei_seg_mask, self.im_nuclei_stain , morphometry_features_flag=True, fsd_features_flag=True, intensity_features_flag=True, gradient_features_flag=True, haralick_features_flag=True)
+
+        nuclei_feat_dataframe['tile'] = self.tile_fname
 
 
-        with open(os.path.join(cfg.FEATURES_DIR,file_name+"_"+str(cfg.MAGNIFICATION)+"_morpho.csv"), 'a') as f:
-            morphometry_dataframe.to_csv(f, header=f.tell()==0, sep=',')
+        with open(os.path.join(cfg.FEATURES_DIR,file_name+"_"+str(cfg.MAGNIFICATION)+"_nuclei_feat.csv"), 'a') as f:
+            nuclei_feat_dataframe.to_csv(f, header=f.tell()==0, sep=',')
             
         return num_nuclei
 
